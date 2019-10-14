@@ -139,34 +139,38 @@ class MinimaxAgent(MultiAgentSearchAgent):
           gameState.isWin():
             Returns whether or not the game state is a winning state
 
-          gameState.isLose():
+          gameState.isLose():http://www.zimuxia.cn/
             Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        return self.minimax(gameState, 0)[0]
+        return self.minimax(gameState, 0, 0)[0]
         util.raiseNotDefined()
 
     # minimax的递归，返回(action, bestScore)
-    def minimax(self, gameState, depth):
-        agentNum = gameState.getNumAgents()
-        # 当遍历深度足够或者游戏结束时，返回(None,当前分数)
-        if depth == agentNum * self.depth or gameState.isWin() or gameState.isLose():
+    def minimax(self, gameState, agent, depth):
+        if depth == self.depth * gameState.getNumAgents() or gameState.isWin() or gameState.isLose():
             return (None, self.evaluationFunction(gameState))
-        # 记录变量
-        agentIndex = depth % agentNum
-        legalMoves = gameState.getLegalActions(agentIndex)
-        scores = []
+        legalMoves = gameState.getLegalActions(agent)
+        successor = []
         for action in legalMoves:
-            newState = gameState.generateSuccessor(agentIndex, action)
-            scores.append(self.minimax(newState, depth+1)[1])
-        # 依据agentIndex记录bestScores，当agent为pacman时取scores的最大值，为ghost时取最小值
-        if agentIndex == 0:
-            bestScore = max(scores)
+            successor.append(gameState.generateSuccessor(agent, action))
+        value = []
+        if agent == 0:
+            for newState in successor:
+                value.append(self.minimax(newState, 1, depth + 1)[1])
+            bestValue = max(value)
         else:
-            bestScore = min(scores)
-        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
-        chosenIndex = random.choice(bestIndices)  # Pick randomly among the best
-        return (legalMoves[chosenIndex], bestScore)
+            for newState in successor:
+                # 当鬼的数目大于2时，需要多层min layer
+                if agent + 1 < gameState.getNumAgents():
+                    value.append(self.minimax(newState, agent + 1, depth + 1)[1])
+                else:
+                    # 当鬼的min layer都遍历完时，重新回到agent=0
+                    value.append(self.minimax(newState, 0, depth + 1)[1])
+            bestValue = min(value)
+        bestIndices = [index for index in range(len(value)) if value[index] == bestValue]
+        chosenIndex = random.choice(bestIndices)
+        return (legalMoves[chosenIndex], bestValue)
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -178,47 +182,49 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        return self.minimax(gameState, 0, -9999, 9999)[0]
+        return self.minimax(gameState, 0, 0, -9999, 9999)[0]
         util.raiseNotDefined()
 
-    # minimax的递归，返回(action, bestScore, aplha, beta)
-    def minimax(self, gameState, depth, alpha, beta):
-        agentNum = gameState.getNumAgents()
-        # 当遍历深度足够或者游戏结束时，返回(None,当前分数)
-        if depth == agentNum * self.depth or gameState.isWin() or gameState.isLose():
+    def minimax(self, gameState, agent, depth, alpha, beta):
+        if depth == self.depth * gameState.getNumAgents() or gameState.isWin() or gameState.isLose():
             return (None, self.evaluationFunction(gameState))
-        # 记录变量
-        agentIndex = depth % agentNum
-        legalMoves = gameState.getLegalActions(agentIndex)
-        minScore = 9999
-        maxScore = -9999
-        for action in legalMoves:
-            newState = gameState.generateSuccessor(agentIndex, action)
-            value = self.minimax(newState, depth + 1, alpha, beta)[1]
-            if agentIndex == 0:
-                # find max: 判断v>beta？
-                if value >= maxScore:
-                    maxScore = value
+        legalMoves = gameState.getLegalActions(agent)
+        maxValue = -9999
+        minValue = 9999
+        if agent == 0:
+            # find max: 判断v>beta？
+            for action in legalMoves:
+                newState = gameState.generateSuccessor(agent, action)
+                value = self.minimax(newState, 1, depth + 1, alpha, beta)[1]
+                if value > maxValue:
+                    maxValue = value
                     chooseAction = action
                     if value > beta:
-                        return (chooseAction, maxScore)
+                        return (chooseAction, maxValue)
                 # max结点：确定alpha
-                alpha = max(alpha, maxScore)
+                alpha = max(alpha, maxValue)
+        else:
+            # find min: 判断v<alpha？
+            if agent + 1 < gameState.getNumAgents():
+                nextAgent = agent + 1
             else:
-                # find min: 判断v<alpha?
-                if value <= minScore:
-                    minScore = value
+                nextAgent = 0
+            for action in legalMoves:
+                newState = gameState.generateSuccessor(agent, action)
+                value = self.minimax(newState, nextAgent, depth + 1, alpha, beta)[1]
+                if value < minValue:
+                    minValue = value
                     chooseAction = action
                     if value < alpha:
-                        return (chooseAction, minScore)
+                        return (chooseAction, minValue)
                 # min结点：确定beta
-                beta = min(beta, minScore)
-        # 依据agentIndex记录bestScore，当agent为pacman时取max，为ghost时取min
-        if agentIndex == 0:
-            bestScore = maxScore
+                beta = min(beta, minValue)
+        # 依据agentIndex记录result，当agent为pacman时取max，为ghost时取min
+        if agent == 0:
+            result = maxValue
         else:
-            bestScore = minScore
-        return (chooseAction, bestScore)
+            result = minValue
+        return (chooseAction, result)
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -233,29 +239,31 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        return self.expectimax(gameState, 0)[0]
+        return self.expectimax(gameState, 0, 0)[0]
         util.raiseNotDefined()
 
     # expectimax的递归，返回(action, bestScore)
-    def expectimax(self, gameState, depth):
-        agentNum = gameState.getNumAgents()
+    def expectimax(self, gameState, agent, depth):
         # 当遍历深度足够或者游戏结束时，返回(None,当前分数)
-        if depth == agentNum * self.depth or gameState.isWin() or gameState.isLose():
+        if depth == gameState.getNumAgents() * self.depth or gameState.isWin() or gameState.isLose():
             return (None, self.evaluationFunction(gameState))
         # 记录变量
-        agentIndex = depth % agentNum
-        legalMoves = gameState.getLegalActions(agentIndex)
+        legalMoves = gameState.getLegalActions(agent)
         probability = 1.0 / len(legalMoves)
         scores = []
         averageScore = 0
         for action in legalMoves:
-            newState = gameState.generateSuccessor(agentIndex, action)
-            if agentIndex == 0:
-                scores.append(self.expectimax(newState, depth + 1)[1])
+            newState = gameState.generateSuccessor(agent, action)
+            if agent==0:
+                scores.append(self.expectimax(newState, 1, depth + 1)[1])
             else:
-                averageScore += probability * self.expectimax(newState, depth + 1)[1]
+                if agent+1 < gameState.getNumAgents():
+                    nextAgent = agent + 1
+                else:
+                    nextAgent = 0
+                averageScore += probability * self.expectimax(newState, nextAgent, depth + 1)[1]
         # 当前agent为ghost时，返回averageScore；为pacman时返回最大分数
-        if agentIndex != 0:
+        if agent != 0:
             return (None, averageScore)
         bestScore = max(scores)
         bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]

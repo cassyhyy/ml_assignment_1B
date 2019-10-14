@@ -125,79 +125,74 @@ class GameRules:
 
     # 初始化一些Q相关变量
     def getQVariable(self):
-        # 指定a,b,c,d为质数，这样在做乘积计算时不会产生多余因子，便于value简化为monoid
-        a = 2
-        b = 3
-        c = 5
-        d = 7
-        QDict = self.getQDict(a, b, c ,d)
-        monoid = set([1, a, b, a*b, b**2, a*b**2, c, a*c, b*c, a*b*c, c**2, a*c**2, b*c**2, a*b*c**2, d, a*d, b*d, a*b*d])
+        QDict = self.getQDict()
+        monoid = set(['1', 'a', 'b', 'ab', 'bb', 'abb', 'c', 'ac', 'bc', 'abc', 'cc', 'acc', 'bcc', 'abcc', 'd', 'ad', 'bd', 'abd'])
         # Q =〈a, b, c, d | a2 = 1, b3 = b, b2c = c, c3 = ac2, b2d = d, cd = ad, d2 = c2〉
-        monoidDict = {str(a**2):1, str(b**3):b, str(b**2*c):c, str(c**3):a*c**2, str(b**2*d):d, str(c*d):a*d, str(d**2):c**2}
-        pPosition = set([a, b**2, b*c, c**2])
+        monoidDict = {'aa': '1', 'bbb': 'b', 'bbc': 'c', 'ccc': 'acc', 'bbd': 'd', 'cd': 'ad', 'dd': 'cc'}
+        pPosition = set(['a', 'bb', 'bc', 'cc'])
         nPosition = monoid - pPosition
         return (QDict, monoid, monoidDict, pPosition, nPosition)
 
     # 依据102种情况的board情况获得相应的Q值
-    def getQDict(self, a, b, c, d):
+    def getQDict(self):
         # 依据图中102种情况创建QList（去除dead情况）
         QList = \
             [   # 第1行
-                [[False, False, False, False, False, False, False, False, False], c],
-                [[True, False, False, False, False, False, False, False, False], 1],
-                [[False, True, False, False, False, False, False, False, False], 1],
-                [[False, False, False, False, True, False, False, False, False], c ** 2],
-                [[True, True, False, False, False, False, False, False, False], a * d],
-                [[True, False, True, False, False, False, False, False, False], b],
-                [[True, False, False, False, True, False, False, False, False], b],
-                [[True, False, False, False, False, True, False, False, False], b],
-                [[True, False, False, False, False, False, False, False, True], a],
+                [[False, False, False, False, False, False, False, False, False], 'c'],
+                [[True, False, False, False, False, False, False, False, False], '1'],
+                [[False, True, False, False, False, False, False, False, False], '1'],
+                [[False, False, False, False, True, False, False, False, False], 'cc'],
+                [[True, True, False, False, False, False, False, False, False], 'ad'],
+                [[True, False, True, False, False, False, False, False, False], 'b'],
+                [[True, False, False, False, True, False, False, False, False], 'b'],
+                [[True, False, False, False, False, True, False, False, False], 'b'],
+                [[True, False, False, False, False, False, False, False, True], 'a'],
                 # 第2行
-                [[False, True, False, True, False, False, False, False, False], a],
-                [[False, True, False, False, True, False, False, False, False], b],
-                [[False, True, False, False, False, False, False, True, False], a],
-                [[True, True, False, True, False, False, False, False, False], b],
-                [[True, True, False, False, True, False, False, False, False], a * b],
-                [[True, True, False, False, False, True, False, False, False], d],
-                [[True, True, False, False, False, False, True, False, False], a],
-                [[True, True, False, False, False, False, False, True, False], d],
+                [[False, True, False, True, False, False, False, False, False], 'a'],
+                [[False, True, False, False, True, False, False, False, False], 'b'],
+                [[False, True, False, False, False, False, False, True, False], 'a'],
+                [[True, True, False, True, False, False, False, False, False], 'b'],
+                [[True, True, False, False, True, False, False, False, False], 'ab'],
+                [[True, True, False, False, False, True, False, False, False], 'd'],
+                [[True, True, False, False, False, False, True, False, False], 'a'],
+                [[True, True, False, False, False, False, False, True, False], 'd'],
                 # 第3行
-                [[True, True, False, False, False, False, False, False, True], d],
-                [[True, False, True, False, True, False, False, False, False], a],
-                [[True, False, True, False, False, False, True, False, False], a * b],
-                [[True, False, True, False, False, False, False, True, False], a],
-                [[True, False, False, False, True, True, False, False, False], a],
-                [[True, False, False, False, False, True, False, True, False], 1],
-                [[False, True, False, True, True, False, False, False, False], a * b],
-                [[False, True, False, True, False, True, False, False, False], b],
+                [[True, True, False, False, False, False, False, False, True], 'd'],
+                [[True, False, True, False, True, False, False, False, False], 'a'],
+                [[True, False, True, False, False, False, True, False, False], 'ab'],
+                [[True, False, True, False, False, False, False, True, False], 'a'],
+                [[True, False, False, False, True, True, False, False, False], 'a'],
+                [[True, False, False, False, False, True, False, True, False], '1'],
+                [[False, True, False, True, True, False, False, False, False], 'ab'],
+                [[False, True, False, True, False, True, False, False, False], 'b'],
                 # 第4行
-                [[True, True, False, True, True, False, False, False, False], a],
-                [[True, True, False, True, False, True, False, False, False], a],
-                [[True, True, False, True, False, False, False, False, True], a],
-                [[True, True, False, False, True, True, False, False, False], b],
+                [[True, True, False, True, True, False, False, False, False], 'a'],
+                [[True, True, False, True, False, True, False, False, False], 'a'],
+                [[True, True, False, True, False, False, False, False, True], 'a'],
+                [[True, True, False, False, True, True, False, False, False], 'b'],
                 # 第5行
-                [[True, True, False, False, True, False, True, False, False], b],
-                [[True, True, False, False, False, True, True, False, False], b],
-                [[True, True, False, False, False, True, False, True, False], a * b],
-                [[True, True, False, False, False, True, False, False, True], a * b],
-                [[True, True, False, False, False, False, True, True, False], b],
-                [[True, True, False, False, False, False, True, False, True], b],
-                [[True, True, False, False, False, False, False, True, True], a],
+                [[True, True, False, False, True, False, True, False, False], 'b'],
+                [[True, True, False, False, False, True, True, False, False], 'b'],
+                [[True, True, False, False, False, True, False, True, False], 'ab'],
+                [[True, True, False, False, False, True, False, False, True], 'ab'],
+                [[True, True, False, False, False, False, True, True, False], 'b'],
+                [[True, True, False, False, False, False, True, False, True], 'b'],
+                [[True, True, False, False, False, False, False, True, True], 'a'],
                 # 第6行
-                [[True, False, True, False, True, False, False, True, False], b],
-                [[True, False, True, False, False, False, True, False, True], a],
-                [[True, False, False, False, True, True, False, True, False], b],
-                [[False, True, False, True, False, True, False, True, False], a],
+                [[True, False, True, False, True, False, False, True, False], 'b'],
+                [[True, False, True, False, False, False, True, False, True], 'a'],
+                [[True, False, False, False, True, True, False, True, False], 'b'],
+                [[False, True, False, True, False, True, False, True, False], 'a'],
                 # 第7行
-                [[True, True, False, True, False, True, False, True, False], b],
+                [[True, True, False, True, False, True, False, True, False], 'b'],
                 # 第8行
-                [[True, True, False, True, False, True, False, False, True], b],
-                [[True, True, False, False, True, True, True, False, False], a],
-                [[True, True, False, False, False, True, True, True, False], a],
-                [[True, True, False, False, False, True, True, False, True], a],
+                [[True, True, False, True, False, True, False, False, True], 'b'],
+                [[True, True, False, False, True, True, True, False, False], 'a'],
+                [[True, True, False, False, False, True, True, True, False], 'a'],
+                [[True, True, False, False, False, True, True, False, True], 'a'],
                 # 第9行全为dead状态
                 # 第10行
-                [[True, True, False, True, False, True, False, True, True], a]
+                [[True, True, False, True, False, True, False, True, True], 'a']
             ]
         dict = {}
         for board, value in QList:
@@ -215,7 +210,10 @@ class GameRules:
     def boardToString(self, board):
         result = str()
         for b in board:
-            result += str(int(b))  # int(False)==0
+            if b:
+                result += "T"
+            else:
+                result += "F"
         return result
 
     # 逆时针旋转board 90°
@@ -228,22 +226,52 @@ class GameRules:
 
     # 获取当前3个board的QValue的乘积
     def getQValues(self, boards):
-        value = 1
+        value = ''
         for board in boards:
             if not self.deadTest(board):
                 key = self.boardToString(board)
-                value *= self.Q_dict.get(key)
+                value += self.Q_dict.get(key)  # 字符串拼接
         return self.getMonoidQ(value)
 
     # 简化value到monoid_Q
     def getMonoidQ(self, value):
-        result = value
+        result = self.sortString(value)
         while result not in self.Q_monoid:
             for key in self.Q_monoidDict:
-                if result % float(key) == 0:
-                    result = result / float(key) * self.Q_monoidDict.get(key)
+                result = self.haveSequence(result, key, self.Q_monoidDict.get(key))
         return result
 
+    # 字符串升序排列
+    def sortString(self, str):
+        # 字符串当中只有1时返回'1'
+        onlyOne = True
+        for s in str:
+            if s != '1':
+                onlyOne = False
+                break
+        if onlyOne or str == '':
+            return '1'
+        # 字符串升序排序
+        l = list(str)
+        l.sort()
+        return "".join(l).lstrip('1')
+
+    # 判断字符串中是否有子序列key，并返回对应覆盖了value后的字符串
+    def haveSequence(self, str, key, value):
+        if key == 'bbd':
+            # 分2段考虑
+            index = str.find('bb')
+            index2 = str.find('d')
+            if index >= 0 and index2 > 0:
+                return self.sortString(str[0:index]+str[index+2:index2]+str[index2+1:]+value)
+            else:
+                return str
+        else:
+            index = str.find(key)
+            if index >= 0:
+                return self.sortString(str[0:index]+str[index+len(key):]+value)
+            else:
+                return str
 
 class TicTacToeAgent():
     """
@@ -265,23 +293,59 @@ class TicTacToeAgent():
           You can initialize some variables here, but please do not modify the input parameters.
         """
         {}
+        self.depth = 1.5
 
     def getAction(self, gameState, gameRules):
-        legalActions = gameState.getLegalActions(gameRules)
-        actions = []
-        for action in legalActions:
-            newBoards = gameState.generateSuccessor(action).boards
-            value = gameRules.getQValues(newBoards)
-            # 如果QValue在P-Position中，该行动赢的几率大
-            if value in gameRules.Q_pPostion:
-                # return action
-                actions.append(action)
-        if len(actions) > 0:
-            return random.choice(actions)
-        else:
-            return random.choice(legalActions)
+        # legalActions = gameState.getLegalActions(gameRules)
+        # actions = []
+        # for action in legalActions:
+        #     newBoards = gameState.generateSuccessor(action).boards
+        #     value = gameRules.getQValues(newBoards)
+        #     # 如果QValue在P-Position中，该行动赢的几率大
+        #     if value in gameRules.Q_pPostion:
+        #         # return action
+        #         actions.append(action)
+        # if len(actions) > 0:
+        #     return random.choice(actions)
+        # else:
+        #     return random.choice(legalActions)
+        return self.minimax(gameState, gameRules, 0)[0]
         util.raiseNotDefined()
 
+    # 估算函数，如果当前状态为Q_pPosition，返回10，否则返回-10
+    def evaluationFunction(self, gameState, gameRules):
+        if gameRules.getQValues(gameState.boards) in gameRules.Q_pPostion:
+            return 10
+        else:
+            return -10
+
+    # minimax的递归，返回(action, bestScore)
+    def minimax(self, gameState, gameRules, depth):
+        # 游戏结束
+        if gameRules.isGameOver(gameState.boards):
+            # 如果当前节点为玩家节点(max)，即AI让棋盘dead了，玩家胜利，则返回一个高的值
+            if depth % 2 == 0:
+                return (None, 100)
+            else:
+                return (None, -100)
+        # 到达最深层
+        if depth == self.depth * 2:
+            return (None, self.evaluationFunction(gameState, gameRules))
+        legalMoves = gameState.getLegalActions(gameRules)
+        successor = []
+        for action in legalMoves:
+            successor.append(gameState.generateSuccessor(action))
+        value = []
+        for newState in successor:
+            value.append(self.minimax(newState, gameRules, depth + 1)[1])
+        # print(depth, value)
+        if depth % 2 == 0:
+            bestValue = max(value)
+        else:
+            bestValue = min(value)
+        bestIndices = [index for index in range(len(value)) if value[index] == bestValue]
+        chosenIndex = random.choice(bestIndices)
+        return (legalMoves[chosenIndex], bestValue)
 
 class randomAgent():
     """
@@ -389,7 +453,7 @@ if __name__ == "__main__":
       -a: If specified, the second player will be the randomAgent, otherwise, use keyboardAgent
     """
     # Uncomment the following line to generate the same random numbers (useful for debugging)
-    #random.seed(1)  
+    # random.seed(1)
     parser = OptionParser()
     parser.add_option("-n", dest="numOfGames", default=1, type="int")
     parser.add_option("-m", dest="muteOutput", action="store_true", default=False)
